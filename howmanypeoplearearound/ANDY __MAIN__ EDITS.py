@@ -12,7 +12,7 @@ import netifaces
 import click
 
 from oui import oui
-from earound.analysis import analyze_file
+from analysis import analyze_file
 from colors import *
 
 if os.name != 'nt':
