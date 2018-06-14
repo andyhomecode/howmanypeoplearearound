@@ -11,9 +11,9 @@ import datetime
 import netifaces
 import click
 
-from howmanypeoplearearound.oui import oui
-from howmanypeoplearearound.analysis import analyze_file
-from howmanypeoplearearound.colors import *
+from oui import oui
+from analysis import analyze_file
+from colors import *
 
 if os.name != 'nt':
     from pick import pick
