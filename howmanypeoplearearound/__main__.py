@@ -5,6 +5,8 @@ import platform
 import subprocess
 import json
 import time
+import requests
+import datetime
 
 import netifaces
 import click
@@ -34,6 +36,14 @@ def which(program):
                 return exe_file
     raise
 
+def iftttpost(iphones, androids):
+    """Posts data to an IFTTT channel to save in Google Sheets"""
+    # by Andy Maxwell 6/13/2018 
+    report = {}
+    report["value1"] = datetime.datetime.now().strftime("%m-%d-%Y %H:%M:%S")
+    report["value2"] = iphones
+    report["value3"] = androids
+    print(requests.post('https://maker.ifttt.com/trigger/howmanypeoplearearound/with/key/khiN5Xs3nUOmx0ZGKrY8t', data=report).text)
 
 def showTimer(timeleft):
     """Shows a countdown timer"""
@@ -115,8 +125,8 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         title = 'Please choose the adapter you want to use: '
         adapter, index = pick(netifaces.interfaces(), title)
 
-    print("Using %s adapter and scanning for %s seconds..." %
-          (adapter, scantime))
+    # print("Using %s adapter and scanning for %s seconds..." %
+    #      (adapter, scantime))
 
     if not number:
         # Start timer
@@ -208,6 +218,8 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         'LG Electronics (Mobile Communications)']
 
     cellphone_people = []
+    androids = 0
+    iphones = 0
     for mac in foundMacs:
         oui_id = 'Not in OUI'
         if mac[:8] in oui:
@@ -218,6 +230,10 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
             if not nearby or (nearby and foundMacs[mac] > -70):
                 cellphone_people.append(
                     {'company': oui_id, 'rssi': foundMacs[mac], 'mac': mac})
+                if oui_id == 'Apple, Inc.':
+                    iphones += 1
+                else:
+                    androids += 1
     if sort:
         cellphone_people.sort(key=lambda x: x['rssi'], reverse=True)
     if verbose:
@@ -231,7 +247,11 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
                            percentage_of_people_with_phones))
 
     if number and not jsonprint:
-        print(num_people)
+        print("Total: {}".format(num_people))
+        print("iPhones: {}  Androids: {}".format(iphones, androids))
+        #print(cellphone_people)
+        # adding IFTTT post
+        iftttpost(iphones, androids)
     elif jsonprint:
         print(json.dumps(cellphone_people, indent=2))
     else:
